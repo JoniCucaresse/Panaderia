@@ -1,0 +1,58 @@
+﻿<Window x:Class="Panaderia.Wpf.Views.MateriaPrimaFormView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Materia Prima"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Nombre label -->
+            <RowDefinition Height="Auto"/>
+            <!-- Nombre input -->
+            <RowDefinition Height="Auto"/>
+            <!-- Unidad label -->
+            <RowDefinition Height="Auto"/>
+            <!-- Unidad combo -->
+            <RowDefinition Height="Auto"/>
+            <!-- Costo label -->
+            <RowDefinition Height="Auto"/>
+            <!-- Costo input -->
+            <RowDefinition Height="Auto"/>
+            <!-- Botones -->
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Nombre"/>
+        <TextBox Grid.Row="1"
+                 Width="250"
+                 Margin="0,5,0,10"
+                 Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="2" Text="Unidad de medida"/>
+        <ComboBox Grid.Row="3"
+                  Margin="0,5,0,10"
+                  ItemsSource="{Binding Unidades}"
+                  SelectedItem="{Binding UnidadSeleccionada}"/>
+
+        <TextBlock Grid.Row="4" Text="Costo por unidad"/>
+        <TextBox Grid.Row="5"
+                 Margin="0,5,0,20"
+                 Text="{Binding CostoPorUnidad}"/>
+
+        <StackPanel Grid.Row="6"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Content="Guardar"
+                    Width="80"
+                    Margin="5"
+                    Command="{Binding GuardarCommand}"
+                    IsDefault="True"/>
+            <Button Content="Cancelar"
+                    Width="80"
+                    Margin="5"
+                    Command="{Binding CancelarCommand}"/>
+        </StackPanel>
+    </Grid>
+</Window>
