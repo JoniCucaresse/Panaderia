@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Panaderia.Domain.Entities;
+using Panaderia.Domain.Repositories;
 using Panaderia.Infrastructure.Persistence;
 using System;
 using System.Collections.Generic;
@@ -39,7 +40,22 @@ namespace Panaderia.Infrastructure.Repositories
 
         public async Task UpdateAsync(MateriaPrima materiaPrima)
         {
-            _context.MateriasPrimas.Update(materiaPrima);
+            // ✅ Verificar que no sea null
+            if (materiaPrima == null)
+                throw new ArgumentNullException(nameof(materiaPrima));
+
+            // ✅ Buscar la entidad existente en la BD
+            var existing = await _context.MateriasPrimas.FindAsync(materiaPrima.Id);
+
+            if (existing == null)
+                throw new InvalidOperationException($"No se encontró la materia prima con Id {materiaPrima.Id}");
+
+            // ✅ Actualizar los valores
+            existing.Nombre = materiaPrima.Nombre;
+            existing.UnidadMedida = materiaPrima.UnidadMedida;
+            existing.CostoPorUnidad = materiaPrima.CostoPorUnidad;
+            existing.FechaActualizacion = DateTime.Now;
+
             await _context.SaveChangesAsync();
         }
 

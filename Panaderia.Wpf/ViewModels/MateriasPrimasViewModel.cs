@@ -1,6 +1,9 @@
 ﻿using Panaderia.Domain.Entities;
+using Panaderia.Domain.Repositories;
 using Panaderia.Infrastructure.Repositories;
 using Panaderia.Wpf.Views;
+using Panaderia.App.DTOs;
+using Panaderia.App.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,14 +17,16 @@ namespace Panaderia.Wpf.ViewModels
 {
     public class MateriasPrimasViewModel : BaseViewModel
     {
-        private readonly IMateriaPrimaRepository _repository;
+        private readonly IMateriaPrimaService _service;
+
         public RelayCommand EditarCommand { get; }
         public RelayCommand EliminarCommand { get; }
+        public ICommand AgregarCommand { get; }
 
-        public ObservableCollection<MateriaPrima> MateriasPrimas { get; } = new();
+        public ObservableCollection<MateriaPrimaDto> MateriasPrimas { get; } = new();
 
-        private MateriaPrima? _materiaPrimaSeleccionada;
-        public MateriaPrima? MateriaPrimaSeleccionada
+        private MateriaPrimaDto? _materiaPrimaSeleccionada;
+        public MateriaPrimaDto? MateriaPrimaSeleccionada
         {
             get => _materiaPrimaSeleccionada;
             set
@@ -33,19 +38,14 @@ namespace Panaderia.Wpf.ViewModels
             }
         }
 
-        public ICommand AgregarCommand { get; }
-        //public ICommand EditarCommand { get; }
-        //public ICommand EliminarCommand { get; }
-
-        public MateriasPrimasViewModel(IMateriaPrimaRepository repository)
+        public MateriasPrimasViewModel(IMateriaPrimaService service)
         {
-            _repository = repository;
+            _service = service;
 
             AgregarCommand = new RelayCommand(Agregar);
             EditarCommand = new RelayCommand(
-    Editar,
-    () => MateriaPrimaSeleccionada != null);
-
+                Editar,
+                () => MateriaPrimaSeleccionada != null);
             EliminarCommand = new RelayCommand(
                 Eliminar,
                 () => MateriaPrimaSeleccionada != null);
@@ -55,10 +55,28 @@ namespace Panaderia.Wpf.ViewModels
 
         private async Task CargarAsync()
         {
-            MateriasPrimas.Clear();
-            var lista = await _repository.GetAllAsync();
-            foreach (var item in lista)
-                MateriasPrimas.Add(item);
+            try
+            {
+                MateriasPrimas.Clear();
+
+                var resultado = await _service.ObtenerTodasAsync();
+
+                if (resultado.IsSuccess && resultado.Data != null)
+                {
+                    foreach (var item in resultado.Data)
+                        MateriasPrimas.Add(item);
+                }
+                else
+                {
+                    MessageBox.Show(resultado.ErrorMessage, "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error inesperado: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void Agregar()
@@ -71,8 +89,7 @@ namespace Panaderia.Wpf.ViewModels
         {
             if (MateriaPrimaSeleccionada == null) return;
 
-            // Copia para no editar directo
-            var copia = new MateriaPrima
+            var dto = new ActualizarMateriaPrimaDto
             {
                 Id = MateriaPrimaSeleccionada.Id,
                 Nombre = MateriaPrimaSeleccionada.Nombre,
@@ -80,7 +97,7 @@ namespace Panaderia.Wpf.ViewModels
                 CostoPorUnidad = MateriaPrimaSeleccionada.CostoPorUnidad
             };
 
-            if (AbrirFormulario(copia))
+            if (AbrirFormulario(dto))
                 await CargarAsync();
         }
 
@@ -89,25 +106,35 @@ namespace Panaderia.Wpf.ViewModels
             if (MateriaPrimaSeleccionada == null) return;
 
             var confirmar = MessageBox.Show(
-                "¿Eliminar materia prima?",
-                "Confirmar",
+                $"¿Eliminar '{MateriaPrimaSeleccionada.Nombre}'?",
+                "Confirmar eliminación",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
             if (confirmar == MessageBoxResult.Yes)
             {
-                await _repository.DeleteAsync(MateriaPrimaSeleccionada.Id);
-                await CargarAsync();
+                var resultado = await _service.EliminarAsync(MateriaPrimaSeleccionada.Id);
+
+                if (resultado.IsSuccess)
+                {
+                    await CargarAsync();
+                }
+                else
+                {
+                    MessageBox.Show(resultado.ErrorMessage, "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
-        private bool AbrirFormulario(MateriaPrima? materia = null)
+
+        private bool AbrirFormulario(ActualizarMateriaPrimaDto? dto = null)
         {
             var window = new MateriaPrimaFormView
             {
                 Owner = Application.Current.MainWindow
             };
 
-            var vm = new MateriaPrimaFormViewModel(_repository, window, materia);
+            var vm = new MateriaPrimaFormViewModel(_service, window, dto);
             window.DataContext = vm;
 
             return window.ShowDialog() == true;

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Panaderia.Infrastructure.Repositories
+namespace Panaderia.Domain.Repositories
 {
     public interface IMateriaPrimaRepository
     {

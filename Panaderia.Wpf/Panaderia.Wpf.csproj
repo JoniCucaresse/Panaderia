@@ -11,7 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Panaderia.Application\Panaderia.App.csproj" />
     <ProjectReference Include="..\Panaderia.Domain\Panaderia.Domain.csproj" />
-    <ProjectReference Include="..\Panaderia.Infraestructure\Panaderia.Infrastructure.csproj" />
+    <ProjectReference Include="..\Panaderia.Infrastructure\Panaderia.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +23,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.11" />
+	  <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.11" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.11" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.11" />
   </ItemGroup>
 
 </Project>

@@ -10,25 +10,39 @@ namespace Panaderia.Domain.Entities
     {
         public int Id { get; set; }
 
-        public string Nombre { get; set; } = string.Empty;
+        private string _nombre = string.Empty;
+        public string Nombre
+        {
+            get => _nombre;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("El nombre es obligatorio");
+                _nombre = value;
+            }
+        }
 
-        // Ej: Gramo, Mililitro, Unidad
         public UnidadMedida UnidadMedida { get; set; }
 
-        // Costo por unidad base (ej: costo por gramo)
-        public decimal CostoPorUnidad { get; set; }
+        private decimal _costoPorUnidad;
+        public decimal CostoPorUnidad
+        {
+            get => _costoPorUnidad;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("El costo debe ser mayor a 0");
+                _costoPorUnidad = value;
+                FechaActualizacion = DateTime.Now;
+            }
+        }
 
         public DateTime FechaActualizacion { get; set; } = DateTime.Now;
-
         public bool Activo { get; set; } = true;
 
         public void ActualizarCosto(decimal nuevoCosto)
         {
-            if (nuevoCosto <= 0)
-                throw new ArgumentException("El costo debe ser mayor a 0");
-
-            CostoPorUnidad = nuevoCosto;
-            FechaActualizacion = DateTime.Now;
+            CostoPorUnidad = nuevoCosto; // Usa el setter con validación
         }
     }
 }

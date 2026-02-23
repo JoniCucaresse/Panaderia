@@ -1,8 +1,14 @@
-﻿using Panaderia.Domain.Entities;
+﻿using Panaderia.App.Common;
+using Panaderia.App.DTOs;
+using Panaderia.App.Services.Interfaces;
+using Panaderia.Domain.Entities;
+using Panaderia.Domain.Repositories;
 using Panaderia.Infrastructure.Repositories;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,29 +19,32 @@ namespace Panaderia.Wpf.ViewModels
 {
     public class MateriaPrimaFormViewModel: BaseViewModel
     {
-        private readonly IMateriaPrimaRepository _repository;
+        private readonly IMateriaPrimaService _service;
         private readonly Window _window;
-        private readonly MateriaPrima _materiaPrima;
         private readonly bool _esEdicion;
+        private readonly int _id;
+
         public RelayCommand GuardarCommand { get; }
         public RelayCommand CancelarCommand { get; }
-        public Action? Cerrar { get; set; }
+
+        private string _nombre = string.Empty;
         public string Nombre
         {
-            get => _materiaPrima.Nombre;
+            get => _nombre;
             set
             {
-                _materiaPrima.Nombre = value;
+                _nombre = value;
                 OnPropertyChanged();
             }
         }
 
+        private decimal _costoPorUnidad;
         public decimal CostoPorUnidad
         {
-            get => _materiaPrima.CostoPorUnidad;
+            get => _costoPorUnidad;
             set
             {
-                _materiaPrima.CostoPorUnidad = value;
+                _costoPorUnidad = value;
                 OnPropertyChanged();
             }
         }
@@ -43,60 +52,116 @@ namespace Panaderia.Wpf.ViewModels
         public ObservableCollection<UnidadMedida> Unidades { get; }
             = new(Enum.GetValues<UnidadMedida>());
 
+        private UnidadMedida _unidadSeleccionada;
         public UnidadMedida UnidadSeleccionada
         {
-            get => _materiaPrima.UnidadMedida;
+            get => _unidadSeleccionada;
             set
             {
-                _materiaPrima.UnidadMedida = value;
+                _unidadSeleccionada = value;
                 OnPropertyChanged();
             }
         }
 
-        
-
         public MateriaPrimaFormViewModel(
-            IMateriaPrimaRepository repository,
+            IMateriaPrimaService service,
             Window window,
-            MateriaPrima? materiaPrima = null)
+            ActualizarMateriaPrimaDto? dto = null)
         {
-            _repository = repository;
+            _service = service;
             _window = window;
-            if (materiaPrima == null)
+
+            if (dto == null)
             {
-                materiaPrima = new MateriaPrima();
                 _esEdicion = false;
+                _id = 0;
+                Nombre = string.Empty;
+                CostoPorUnidad = 0;
+                UnidadSeleccionada = UnidadMedida.Gramo;
             }
             else
             {
-                materiaPrima = materiaPrima; // 🔥 MISMA INSTANCIA
                 _esEdicion = true;
+                _id = dto.Id;
+                Nombre = dto.Nombre;
+                CostoPorUnidad = dto.CostoPorUnidad;
+                UnidadSeleccionada = dto.UnidadMedida;
             }
 
             GuardarCommand = new RelayCommand(Guardar);
-            CancelarCommand = new RelayCommand(() => Cerrar?.Invoke());
+            CancelarCommand = new RelayCommand(Cancelar);
         }
 
         private async void Guardar()
         {
-            if (string.IsNullOrWhiteSpace(Nombre))
+            try
             {
-                MessageBox.Show("El nombre es obligatorio");
-                return;
-            }
+                if (_esEdicion)
+                {
+                    var dto = new ActualizarMateriaPrimaDto
+                    {
+                        Id = _id,
+                        Nombre = Nombre,
+                        UnidadMedida = UnidadSeleccionada,
+                        CostoPorUnidad = CostoPorUnidad
+                    };
 
-            if (CostoPorUnidad <= 0)
+                    var resultado = await _service.ActualizarAsync(dto);
+
+                    if (!resultado.IsSuccess)
+                    {
+                        MostrarErrores(resultado);
+                        return;
+                    }
+                }
+                else
+                {
+                    var dto = new CrearMateriaPrimaDto
+                    {
+                        Nombre = Nombre,
+                        UnidadMedida = UnidadSeleccionada,
+                        CostoPorUnidad = CostoPorUnidad
+                    };
+
+                    var resultado = await _service.CrearAsync(dto);
+
+                    if (!resultado.IsSuccess)
+                    {
+                        MostrarErrores(resultado);
+                        return;
+                    }
+                }
+
+                _window.DialogResult = true;
+                _window.Close();
+            }
+            catch (Exception ex)
             {
-                MessageBox.Show("El costo debe ser mayor a 0");
-                return;
+                MessageBox.Show($"Error inesperado: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            if (_esEdicion)
-                await _repository.UpdateAsync(_materiaPrima);
-            else
-                await _repository.AddAsync(_materiaPrima);
-
-            Cerrar?.Invoke();
         }
+
+        private void Cancelar()
+        {
+            _window.DialogResult = false;
+            _window.Close();
+        }
+
+        private void MostrarErrores<T>(Result<T> resultado)
+        {
+            if (resultado.Errors.Any())
+            {
+                var mensajes = string.Join("\n• ", resultado.Errors);
+                MessageBox.Show($"Errores de validación:\n• {mensajes}",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            else
+            {
+                MessageBox.Show(resultado.ErrorMessage, "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
     }
 }
