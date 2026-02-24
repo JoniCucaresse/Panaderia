@@ -19,6 +19,7 @@ namespace Panaderia.Wpf
     /// </summary>
     public partial class App : Application
     {
+        public IServiceProvider Services { get; private set; } = null!;
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -38,11 +39,13 @@ namespace Panaderia.Wpf
             // Views
             services.AddTransient<MainWindow>();
             services.AddTransient<MateriasPrimasView>();
+            services.AddTransient<ProductosView>(); // ✅ Nuevo
 
             // Repositories
             services.AddScoped<IMateriaPrimaRepository, MateriaPrimaRepository>();
             services.AddScoped<IProductoRepository, ProductoRepository>(); // ✅ Nuevo
             services.AddScoped<IRecetaRepository, RecetaRepository>(); // ✅ Nuevo
+            services.AddTransient<ProductosViewModel>();
 
             // ✅ Services (Application Layer)
             services.AddScoped<IMateriaPrimaService, MateriaPrimaService>();
@@ -57,11 +60,11 @@ namespace Panaderia.Wpf
                 builder.AddConsole();
             });
 
-            var provider = services.BuildServiceProvider();
+            Services = services.BuildServiceProvider();
 
-            // Solo abre UNA ventana principal
-            var mainWindow = provider.GetRequiredService<MateriasPrimasView>();
-            mainWindow.DataContext = provider.GetRequiredService<MateriasPrimasViewModel>();
+            // ✅ Abrir ventana de productos
+            var mainWindow = Services.GetRequiredService<ProductosView>();
+            mainWindow.DataContext = Services.GetRequiredService<ProductosViewModel>();
             mainWindow.Show();
         }
     }
