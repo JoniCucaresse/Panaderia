@@ -41,9 +41,13 @@ namespace Panaderia.Wpf
 
             // Repositories
             services.AddScoped<IMateriaPrimaRepository, MateriaPrimaRepository>();
+            services.AddScoped<IProductoRepository, ProductoRepository>(); // ✅ Nuevo
+            services.AddScoped<IRecetaRepository, RecetaRepository>(); // ✅ Nuevo
 
             // ✅ Services (Application Layer)
             services.AddScoped<IMateriaPrimaService, MateriaPrimaService>();
+            services.AddScoped<IProductoService, ProductoService>(); // ✅ Nuevo
+
 
             // ✅ Logging (opcional pero recomendado)
             services.AddLogging(builder =>

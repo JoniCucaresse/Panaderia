@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Panaderia.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Panaderia.Infrastructure.Persistence;
 namespace Panaderia.Infrastructure.Migrations
 {
     [DbContext(typeof(PanaderiaDbContext))]
-    partial class PanaderiaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260223235502_ActualizarRelacionesProductos")]
+    partial class ActualizarRelacionesProductos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
